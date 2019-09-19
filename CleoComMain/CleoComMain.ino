@@ -31,15 +31,20 @@ byte tag;
 bool ShowSettings = false;
 long SettingsDebounceTimer;
 
-////////////// SERIAL SETTINGS //////////////
+////////////// SERIAL GLOBALS //////////////
+#define SerialArraySize 7
+#define SerialBufferSize 10
+char SerialData [SerialArraySize][SerialBufferSize];
+byte SerialPointer = 0;
 
 int16_t SerialBaudArray [4] = {4800, 9600, 19200, 38400};
 byte SerialBaudRate = 2;
-////////////// SPI SETTINGS //////////////
 
-////////////// I2C SETTINGS //////////////
+////////////// SPI GLOBALS //////////////
 
-////////////// UART SETTINGS //////////////
+////////////// I2C GLOBALS //////////////
+
+////////////// UART GLOBALS //////////////
 void setup()
 {
   CleO.begin();
@@ -49,6 +54,15 @@ void setup()
   Intro();
 
   ////////////// SERIAL SETUP //////////////
+  SerialData[0][0] = ' ';
+  SerialData[1][0] = ' ';
+  SerialData[2][0] = ' ';
+  SerialData[3][0] = ' ';
+  SerialData[4][0] = ' ';
+  SerialData[5][0] = ' ';
+  SerialData[6][0] = ' ';
+  SerialData[7][0] = ' ';
+
   Serial.begin(SerialBaudArray[2]);
 
 }
@@ -176,17 +190,40 @@ void MainMenu() //Draws the Main Menu with touch tags
 
 void SerialPage() //Serial Log of data
 {
-  //CleO.StringExt(FONT_SANS_5, (0.50 * ScreenWidth), (0.50 * ScreenHeight), BLACK, MM, 0, 0, "SERIAL");
 
-  int SerialByte = 0;
-  char SerialData [20];
   String SerialString;
-  while (Serial.available() > 0)
+
+  if (Serial.available() > 0)
   {
     SerialString = Serial.readString();
+    SerialString.toCharArray(SerialData[SerialPointer], SerialString.length());
+
+    if (SerialPointer != (SerialArraySize - 1))
+    {
+      SerialPointer++;
+    }
+    else
+    {
+      SerialPointer = 0;
+    }
   }
-  SerialString.toCharArray(SerialData, SerialString.length());
-  CleO.StringExt(FONT_SANS_4, (0.50 * ScreenWidth), (0.90 * ScreenHeight), BLACK, MM, 0, 0, SerialData);
+
+  char SubBuffer [SerialBufferSize];
+  byte positionvalue = SerialPointer;
+  double ScreenPos = 0.80;
+
+  for (byte index = 0; index != SerialArraySize; index++)
+  {
+    if (positionvalue == 0)
+    {
+      positionvalue = (SerialArraySize - 1);
+    }
+
+    strncpy(SubBuffer, SerialData[positionvalue], SerialBufferSize);
+    CleO.StringExt(FONT_SANS_4, (0.50 * ScreenWidth), (ScreenPos * ScreenHeight), BLACK, MM, 0, 0, SubBuffer);
+    ScreenPos = (ScreenPos - 0.10);
+    positionvalue--;
+  }
 }
 
 void SPIPage()
