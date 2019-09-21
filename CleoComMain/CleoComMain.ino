@@ -22,6 +22,7 @@
 #define SerialBaud2 8
 #define SerialBaud3 9
 #define SerialBaud4 10
+#define ClearMemory 11
 
 byte MenuMode = 1;
 byte tag;
@@ -37,7 +38,7 @@ long SettingsDebounceTimer;
 char SerialData [SerialArraySize][SerialBufferSize];
 byte SerialPointer = 0;
 
-int16_t SerialBaudArray [4] = {4800, 9600, 19200, 38400};
+int SerialBaudArray [4] = {4800, 9600, 19200, 38400};
 byte SerialBaudRate = 2;
 
 ////////////// SPI GLOBALS //////////////
@@ -190,7 +191,6 @@ void MainMenu() //Draws the Main Menu with touch tags
 
 void SerialPage() //Serial Log of data
 {
-
   String SerialString;
 
   if (Serial.available() > 0)
@@ -210,7 +210,7 @@ void SerialPage() //Serial Log of data
 
   char SubBuffer [SerialBufferSize];
   byte positionvalue = SerialPointer;
-  double ScreenPos = 0.80;
+  double ScreenPos = 0.90;
 
   for (byte index = 0; index != SerialArraySize; index++)
   {
@@ -220,7 +220,7 @@ void SerialPage() //Serial Log of data
     }
 
     strncpy(SubBuffer, SerialData[positionvalue], SerialBufferSize);
-    CleO.StringExt(FONT_SANS_4, (0.50 * ScreenWidth), (ScreenPos * ScreenHeight), BLACK, MM, 0, 0, SubBuffer);
+    CleO.StringExt(FONT_SANS_4, (0.20 * ScreenWidth), (ScreenPos * ScreenHeight), BLACK, ML, 0, 0, SubBuffer);
     ScreenPos = (ScreenPos - 0.10);
     positionvalue--;
   }
@@ -266,11 +266,14 @@ void SerialSettings()
 {
   char CharOutput [12];
 
-  CleO.StringExt(FONT_SANS_4, (0.10 * ScreenWidth), (0.4 * ScreenHeight), BLACK, MM, 0, 0, "BAUD");
+  CleO.StringExt(FONT_SANS_4, (0.05 * ScreenWidth), (0.4 * ScreenHeight), BLACK, ML, 0, 0, "BAUD:");
 
   itoa (SerialBaudArray[SerialBaudRate], CharOutput, 10);
   CleO.Tag(SerialBaud);
-  CleO.StringExt(FONT_SANS_4, (0.35 * ScreenWidth), (0.4 * ScreenHeight), RED, MM, 0, 0, CharOutput);
+  CleO.StringExt(FONT_SANS_4, (0.30 * ScreenWidth), (0.4 * ScreenHeight), RED, ML, 0, 0, CharOutput);
+
+  CleO.Tag(ClearMemory);
+  CleO.StringExt(FONT_SANS_4, (0.05 * ScreenWidth), (0.50 * ScreenHeight), RED, ML, 0, 0, "CLEAR LOG");
 
   if (tag == SerialBaud)
   {
@@ -325,9 +328,34 @@ void SerialSettings()
 
     //starts a new serial with the new data rate
     Serial.begin(SerialBaudArray[SerialBaudRate]);
-
     CleO.Start();
+  }
 
+  if (tag == ClearMemory)
+  {
+    /*
+      byte positionvalue = SerialPointer;
+      for (byte index = 0; index != SerialArraySize; index++)
+      {
+      SerialData[index][0] = (char)0;
+      //memset(SerialData[index], 0, sizeof(SerialBufferSize));
+
+      }
+    */
+
+    SerialData[0][0] = ' ';
+    SerialData[1][0] = ' ';
+    SerialData[2][0] = ' ';
+    SerialData[3][0] = ' ';
+    SerialData[4][0] = ' ';
+    SerialData[5][0] = ' ';
+    SerialData[6][0] = ' ';
+    SerialData[7][0] = ' ';
+
+
+
+    CleO.StringExt(FONT_SANS_4, (0.05 * ScreenWidth), (0.50 * ScreenHeight), BLACK, ML, 0, 0, "CLEAR LOG");
+    tag = 255;
   }
 
   CleO.Tag(255);
