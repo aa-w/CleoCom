@@ -1,6 +1,7 @@
 /**
     CleoCom ----------------
     Alex.W - September - 2019
+
     This is a little sideproject, please don't blame me if it doesn't work properly.
     ------------------------
 */
@@ -11,10 +12,10 @@
 #define ScreenWidth  480
 #define ScreenHeight 320
 
-#define Mode1 1 //Serial
-#define Mode2 2 //SPI
-#define Mode3 3 //I2C
-#define Mode4 4 //UART
+#define SerialButton 1 //Serial
+#define SPIButton 2 //SPI
+#define I2CButton 3 //I2C
+#define UARTButton 4 //UART
 
 #define Settings 5 //Settings
 #define SerialBaud 6 //Serial Baud rate tag
@@ -24,8 +25,8 @@
 #define SerialBaud4 10
 #define ClearMemory 11
 
-byte MenuMode = 1;
-byte tag;
+byte MenuMode = 1; //Top level menu mode
+byte tag; //Defines UI Events based on touches
 
 ////////////// SETTINGS VAIRABLES //////////////
 
@@ -46,6 +47,7 @@ byte SerialBaudRate = 2;
 ////////////// I2C GLOBALS //////////////
 
 ////////////// UART GLOBALS //////////////
+
 void setup()
 {
   CleO.begin();
@@ -70,13 +72,24 @@ void setup()
 
 void loop()
 {
-  //Draw Stage
-  CleO.Start();
-  MainMenu();
+
+  //BACKEND
+  BackendHandler();
+
+  //UI LOOP
+  UIHandler();
 
   //Touch Handling
-  TouchControl();
+  TouchHandler();
 
+}
+
+void UIHandler() //Handles User Interfaces
+{
+  //Draw Stage
+  CleO.Start();
+
+  MainMenu();
   if (ShowSettings == true)
   {
     SettingsPage();
@@ -104,25 +117,87 @@ void loop()
 
   }
 
+  AnimationLoop();
+  
   CleO.Show();
 }
 
-void MainMenu() //Draws the Main Menu with touch tags
+void BackendHandler() //Handlers the Communication and operation
+{
+  switch (MenuMode)
+  {
+    case 1:
+      SerialHandler();
+      break;
+    case 2:
+      SPIHandler();
+      break;
+    case 3:
+      I2CHandler();
+      break;
+    case 4:
+      UARTHandler();
+      break;
+    default:
+      break;
+  }
+
+}
+
+// ------------------------ BACKEND ----------------------------------------
+
+void SerialHandler() //Serial Backend
+{
+  String SerialString;
+
+  if (Serial.available() > 0)
+  {
+    SerialString = Serial.readString();
+    SerialString.toCharArray(SerialData[SerialPointer], SerialString.length());
+    
+    if (SerialPointer != (SerialArraySize - 1))
+    {
+      SerialPointer++;
+    }
+    else
+    {
+      SerialPointer = 0;
+    }
+  }
+}
+
+void SPIHandler()
 {
 
+}
+
+void I2CHandler()
+{
+
+}
+
+void UARTHandler()
+{
+
+}
+
+// ------------------------ UI ----------------------------------------
+
+void MainMenu() //Draws the Main Menu with touch tags
+{
   //Draws each of the buttons in Grey
   CleO.RectangleColor(GREY);
 
-  CleO.Tag(Mode1);
+  CleO.Tag(SerialButton);
   CleO.RectangleXY((0.01 * ScreenWidth), (0.01 * ScreenHeight), 112, 50);
 
-  CleO.Tag(Mode2);
+  CleO.Tag(SPIButton);
   CleO.RectangleXY((0.251 * ScreenWidth), (0.01 * ScreenHeight), 112, 50);
 
-  CleO.Tag(Mode3);
+  CleO.Tag(I2CButton);
   CleO.RectangleXY((0.491 * ScreenWidth), (0.01 * ScreenHeight), 112, 50);
 
-  CleO.Tag(Mode4);
+  CleO.Tag(UARTButton);
   CleO.RectangleXY((0.731 * ScreenWidth), (0.01 * ScreenHeight), 122, 50);
 
   //Sets the selected button colour
@@ -135,41 +210,38 @@ void MainMenu() //Draws the Main Menu with touch tags
     CleO.RectangleColor(INDIAN_RED);
   }
 
-  //Outlines the selected mode
+  //Outlines in BLUE the selected mode
   switch (MenuMode)
   {
     case 1:
-      CleO.Tag(Mode1);
+      CleO.Tag(SerialButton);
       CleO.RectangleXY((0.01 * ScreenWidth), (0.01 * ScreenHeight), 112, 50);
       break;
     case 2:
-      CleO.Tag(Mode2);
+      CleO.Tag(SPIButton);
       CleO.RectangleXY((0.251 * ScreenWidth), (0.01 * ScreenHeight), 112, 50);
       break;
     case 3:
-      CleO.Tag(Mode3);
+      CleO.Tag(I2CButton);
       CleO.RectangleXY((0.491 * ScreenWidth), (0.01 * ScreenHeight), 112, 50);
       break;
     case 4:
-      CleO.Tag(Mode4);
+      CleO.Tag(UARTButton);
       CleO.RectangleXY((0.731 * ScreenWidth), (0.01 * ScreenHeight), 122, 50);
       break;
   }
 
   //Outputs the button names with the assigned tags
-  CleO.Tag(Mode1);
+  CleO.Tag(SerialButton);
   CleO.StringExt(FONT_SANS_4, (0.125 * ScreenWidth), (0.1 * ScreenHeight), WHITE, MM, 0, 0, "SERIAL");
 
-  CleO.Tag(Mode2);
-
+  CleO.Tag(SPIButton);
   CleO.StringExt(FONT_SANS_4, (0.375 * ScreenWidth), (0.1 * ScreenHeight), WHITE, MM, 0, 0, "SPI");
 
-  CleO.Tag(Mode3);
-
+  CleO.Tag(I2CButton);
   CleO.StringExt(FONT_SANS_4, (0.625 * ScreenWidth), (0.1 * ScreenHeight), WHITE, MM, 0, 0, "I2C");
 
-  CleO.Tag(Mode4);
-
+  CleO.Tag(UARTButton);
   CleO.StringExt(FONT_SANS_4, (0.87 * ScreenWidth), (0.1 * ScreenHeight), WHITE, MM, 0, 0, "UART");
 
   //Draws the settings option for each page - this is whole new system modified by the Menu int
@@ -189,25 +261,8 @@ void MainMenu() //Draws the Main Menu with touch tags
   CleO.Tag(0);
 }
 
-void SerialPage() //Serial Log of data
+void SerialPage() //Serial Page Interactions
 {
-  String SerialString;
-
-  if (Serial.available() > 0)
-  {
-    SerialString = Serial.readString();
-    SerialString.toCharArray(SerialData[SerialPointer], SerialString.length());
-
-    if (SerialPointer != (SerialArraySize - 1))
-    {
-      SerialPointer++;
-    }
-    else
-    {
-      SerialPointer = 0;
-    }
-  }
-
   char SubBuffer [SerialBufferSize];
   byte positionvalue = SerialPointer;
   double ScreenPos = 0.90;
@@ -301,7 +356,7 @@ void SerialSettings()
       CleO.StringExt(FONT_SANS_4, (0.55 * ScreenWidth), (0.7 * ScreenHeight), RED, MM, 0, 0, CharOutput);
 
       CleO.Show();
-      TouchControl();
+      TouchHandler();
       //Sets the position of the Serial Baud Rate in the Array when the baud rate tag is selected
       switch (tag)
       {
@@ -455,7 +510,20 @@ void Intro()  //Draws DS Style Intro Animation Isolated from the rest of the pro
   delay(1500);
 }
 
-void TouchControl()//Touch Control Handler
+void AnimationLoop() //Displays the frame refresh rate
+{
+  long CurrentMillis = (millis() / 100);
+  if ((CurrentMillis % 2) == 0)
+  {
+    CleO.StringExt(FONT_SANS_4, (0.95 * ScreenWidth), (0.90 * ScreenHeight), BLACK, ML, 0, 0, "|");
+  }
+  else
+  {
+    CleO.StringExt(FONT_SANS_4, (0.95 * ScreenWidth), (0.90 * ScreenHeight), BLACK, ML, 0, 0, "/");
+  }
+}
+
+void TouchHandler() //Handles Touch Interactions
 {
   int16_t x, y, dur, TouchedTag;
   CleO.TouchCoordinates(x, y, dur, TouchedTag);
@@ -479,5 +547,4 @@ void TouchControl()//Touch Control Handler
     }
     SettingsDebounceTimer = millis() + 255;
   }
-
 }
