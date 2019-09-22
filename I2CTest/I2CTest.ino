@@ -10,22 +10,21 @@
 
 void setup()
 {
-  pinMode(LED_BUILTIN, OUTPUT);
-
-  Wire.begin(8);
   Serial.begin(19200);
+Wire.begin(2); // Start I2C Bus as Master
+Wire.onRequest(requestEvent);
 }
 
 void loop()
 {
-  digitalWrite(LED_BUILTIN, HIGH);
-  delay(100);
-  digitalWrite(LED_BUILTIN, LOW);
+
+delay(500);
+Serial.println("Looped");
 
 }
 
-void requestEvent()
-{
-  Wire.write("I");
-  Serial.println("Data Sent");
+void requestEvent() {
+  Serial.println("Sent response");
+  Wire.write("yo"); // respond with message of 6 bytes
+  // as expected by master
 }

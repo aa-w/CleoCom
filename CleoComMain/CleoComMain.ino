@@ -80,14 +80,14 @@ void setup()
   Serial.begin(SerialBaudArray[2]);
 
   ////////////// SERIAL SETUP //////////////
-  I2CData[0][0] = '.';
-  I2CData[1][0] = '.';
-  I2CData[2][0] = '.';
-  I2CData[3][0] = '.';
-  I2CData[4][0] = '.';
-  I2CData[5][0] = '.';
-  I2CData[6][0] = '.';
-  I2CData[7][0] = '.';
+  I2CData[0][0] = ' ';
+  I2CData[1][0] = ' ';
+  I2CData[2][0] = ' ';
+  I2CData[3][0] = ' ';
+  I2CData[4][0] = ' ';
+  I2CData[5][0] = ' ';
+  I2CData[6][0] = ' ';
+  I2CData[7][0] = ' ';
 
   Wire.begin();
 
@@ -215,41 +215,22 @@ void SPIHandler()
 
 void I2CHandler()
 {
-  /*
-    #define ArraySize 7
-    #define BufferSize 10
-    char I2CData [ArraySize][BufferSize];
-    byte I2CPointer = 0;
-  */
 
-  String I2CString;
-
-  /*
-    if (Wire.available() > 0)
-    {
-    I2CString = Wire.readString();
-    I2CString.toCharArray(SerialData[I2CPointer], I2CString.length());
-
-    if (I2CPointer != (ArraySize - 1))
-    {
-      I2CPointer++;
-    }
-    else
-    {
-      I2CPointer = 0;
-    }
-    }
-  */
-
-  Wire.requestFrom(8, 6);
-  //Serial.println("Request Sent");
-  while (Wire.available())
+  Wire.requestFrom(2, 2);
+  Serial.println("Request Sent");
+  if (Wire.available())
   {
-    I2CString = Wire.read();
-    I2CString.toCharArray(I2CData[I2CPointer], I2CString.length());
-    //I2CString = I2CData[I2CPointer];
-    Serial.println(I2CData[I2CPointer]);
-
+    //I2CString = Wire.read();
+    Serial.println(Wire.available());
+    //I2CString.toCharArray(SerialData[I2CPointer], I2CString.length());
+    
+    for(int index = 0; index < 2; index++)
+    {
+      Serial.println(Wire.available());
+      I2CData[I2CPointer][index] = Wire.read();
+      Serial.println(I2CData[I2CPointer][index]);
+    }
+    
     if (I2CPointer != (ArraySize - 1))
     {
       I2CPointer++;
@@ -373,30 +354,6 @@ void SPIPage()
 {
   CleO.StringExt(FONT_SANS_5, (0.50 * ScreenWidth), (0.50 * ScreenHeight), BLACK, MM, 0, 0, "SPI");
 }
-
-/*
-  void I2CPage()
-  {
-  char SubBuffer [BufferSize];
-  byte positionvalue = I2CPointer;
-  double ScreenPos = 0.90;
-
-  for (byte index = 0; index != ArraySize; index++)
-  {
-    if (positionvalue == 0)
-    {
-      positionvalue = (ArraySize - 1);
-    }
-
-    strncpy(SubBuffer, I2CData[positionvalue], BufferSize);
-    CleO.StringExt(FONT_SANS_4, (0.20 * ScreenWidth), (ScreenPos * ScreenHeight), BLACK, ML, 0, 0, SubBuffer);
-    ScreenPos = (ScreenPos - 0.10);
-    positionvalue--;
-  }
-  }
-*/
-
-//(SerialPointer, MenuMode)
 
 void Spooler(byte positionvalue) //Universal output Spooler for the data arrays collected
 {
@@ -552,6 +509,11 @@ void I2CSettings()
   CleO.StringExt(FONT_SANS_4, (0.30 * ScreenWidth), (0.40 * ScreenHeight), RED, ML, 0, 0, "4");
   CleO.StringExt(FONT_SANS_4, (0.05 * ScreenWidth), (0.50 * ScreenHeight), BLACK, ML, 0, 0, "SCL:");
   CleO.StringExt(FONT_SANS_4, (0.30 * ScreenWidth), (0.50 * ScreenHeight), RED, ML, 0, 0, "5");
+
+  //add touch support for changing channels
+  //add settings for channel config
+  //add settings for message size to link to handler
+  //add relationship config
 }
 
 void UARTSettings()
