@@ -31,6 +31,13 @@
 #define SerialBaud3 9
 #define SerialBaud4 10
 #define ClearMemory 11
+#define SetI2CAddress 12
+#define SetI2CByteSize 13
+#define IncrementButton 14
+#define DecrementButton 15
+#define DoneButton 16
+#define I2CScan 17
+
 
 byte MenuMode = 1; //Top level menu mode
 byte tag; //Defines UI Events based on touches
@@ -44,18 +51,24 @@ long SettingsDebounceTimer;
 char SerialData [ArraySize][BufferSize];
 byte SerialPointer = 0;
 
-int SerialBaudArray [4] = {4800, 9600, 19200, 38400};
+int16_t SerialBaudArray [4] = {4800, 9600, 19200, 38400};
 byte SerialBaudRate = 2;
 
 ////////////// SPI GLOBALS //////////////
+char SPIData [ArraySize][BufferSize];
 
 ////////////// I2C GLOBALS //////////////
 char I2CData [ArraySize][BufferSize];
 byte I2CPointer = 0;
+
+int I2CAddress = 1;
+byte I2CByteSize = 1;
+
 #define SDAPin 4
 #define SCLPin 5
 
 ////////////// UART GLOBALS //////////////
+char UARTData [ArraySize][BufferSize];
 
 void setup()
 {
@@ -156,7 +169,6 @@ void UIHandler() //Handles User Interfaces
       default:
         break;
     }
-
   }
 
   AnimationLoop();
@@ -216,21 +228,21 @@ void SPIHandler()
 void I2CHandler()
 {
 
-  Wire.requestFrom(2, 2);
+  Wire.requestFrom(I2CAddress, I2CByteSize);
   Serial.println("Request Sent");
   if (Wire.available())
   {
     //I2CString = Wire.read();
     Serial.println(Wire.available());
     //I2CString.toCharArray(SerialData[I2CPointer], I2CString.length());
-    
-    for(int index = 0; index < 2; index++)
+
+    for (int index = 0; index < I2CByteSize; index++)
     {
       Serial.println(Wire.available());
       I2CData[I2CPointer][index] = Wire.read();
       Serial.println(I2CData[I2CPointer][index]);
     }
-    
+
     if (I2CPointer != (ArraySize - 1))
     {
       I2CPointer++;
@@ -504,16 +516,187 @@ void SPISettings()
 
 void I2CSettings()
 {
-  CleO.StringExt(FONT_SANS_4, (0.05 * ScreenWidth), (0.30 * ScreenHeight), BLACK, ML, 0, 0, "Pin Out:");
-  CleO.StringExt(FONT_SANS_4, (0.05 * ScreenWidth), (0.40 * ScreenHeight), BLACK, ML, 0, 0, "SDA:");
-  CleO.StringExt(FONT_SANS_4, (0.30 * ScreenWidth), (0.40 * ScreenHeight), RED, ML, 0, 0, "4");
-  CleO.StringExt(FONT_SANS_4, (0.05 * ScreenWidth), (0.50 * ScreenHeight), BLACK, ML, 0, 0, "SCL:");
-  CleO.StringExt(FONT_SANS_4, (0.30 * ScreenWidth), (0.50 * ScreenHeight), RED, ML, 0, 0, "5");
+  char CharOutput [12];
 
-  //add touch support for changing channels
-  //add settings for channel config
-  //add settings for message size to link to handler
-  //add relationship config
+  CleO.StringExt(FONT_SANS_4, (0.05 * ScreenWidth), (0.30 * ScreenHeight), BLACK, ML, 0, 0, "Pin Out: SDA - 4 SCL - 5");
+  CleO.StringExt(FONT_SANS_4, (0.05 * ScreenWidth), (0.40 * ScreenHeight), BLACK, ML, 0, 0, "Address:");
+
+  CleO.Tag(SetI2CAddress);
+  itoa (I2CAddress, CharOutput, 10);
+  CleO.StringExt(FONT_SANS_4, (0.40 * ScreenWidth), (0.40 * ScreenHeight), RED, ML, 0, 0, CharOutput);
+
+  CleO.StringExt(FONT_SANS_4, (0.05 * ScreenWidth), (0.50 * ScreenHeight), BLACK, ML, 0, 0, "No. Bytes:");
+
+  CleO.Tag(SetI2CByteSize);
+  itoa (I2CByteSize, CharOutput, 10);
+  CleO.StringExt(FONT_SANS_4, (0.40 * ScreenWidth), (0.50 * ScreenHeight), RED, ML, 0, 0, CharOutput);
+
+  CleO.Tag(I2CScan);
+  CleO.StringExt(FONT_SANS_4, (0.50 * ScreenWidth), (0.40 * ScreenHeight), RED, ML, 0, 0, "Scan");
+
+  //Set Address Value
+  if (tag == SetI2CAddress)
+  {
+    CleO.Show();
+
+    bool Selected = false;
+    long DebounceTimer = 0;
+    while (Selected == false)
+    {
+      CleO.Start();
+      CleO.StringExt(FONT_SANS_4, (0.50 * ScreenWidth), (0.05 * ScreenHeight), BLACK, MM, 0, 0, "Set Address:");
+
+      itoa (I2CAddress, CharOutput, 10);
+      CleO.StringExt(FONT_SANS_7, (0.50 * ScreenWidth), (0.50 * ScreenHeight), BLACK, MM, 0, 0, CharOutput);
+
+      DrawSettingsButtons();
+
+      CleO.Show();
+
+      TouchHandler(); //Updates tag with latest touch values
+
+      if (tag == IncrementButton && millis() > DebounceTimer)
+      {
+        I2CAddress++;
+        DebounceTimer = millis() + 200;
+      }
+      else if (tag == DecrementButton && millis() > DebounceTimer)
+      {
+        I2CAddress--;
+        DebounceTimer = millis() + 200;
+      }
+      else if (tag == DoneButton)
+      {
+        Selected = true;
+        CleO.Start();
+      }
+      else
+      {
+      }
+
+    }
+  }
+
+  //Set Byte Size
+  if (tag == SetI2CByteSize)
+  {
+    CleO.Show();
+
+    bool Selected = false;
+    long DebounceTimer = 0;
+    while (Selected == false)
+    {
+      CleO.Start();
+      CleO.StringExt(FONT_SANS_4, (0.50 * ScreenWidth), (0.05 * ScreenHeight), BLACK, MM, 0, 0, "Set Byte Size:");
+
+      itoa (I2CByteSize, CharOutput, 10);
+      CleO.StringExt(FONT_SANS_7, (0.50 * ScreenWidth), (0.50 * ScreenHeight), BLACK, MM, 0, 0, CharOutput);
+
+      DrawSettingsButtons();
+
+      CleO.Show();
+
+      TouchHandler(); //Updates tag with latest touch values
+
+      if (tag == IncrementButton && millis() > DebounceTimer)
+      {
+        I2CByteSize++;
+        DebounceTimer = millis() + 200;
+      }
+      else if (tag == DecrementButton && millis() > DebounceTimer)
+      {
+        I2CByteSize--;
+        DebounceTimer = millis() + 200;
+      }
+      else if (tag == DoneButton)
+      {
+        Selected = true;
+
+      }
+      else
+      {
+      }
+    }
+    CleO.Start();
+  }
+
+  if (tag == I2CScan)
+  {
+    CleO.Show();
+
+    bool Selected = false;
+    byte ScanI2CAddress = 1;
+    long ScanTimer = millis() + 300;
+    while (Selected == false)
+    {
+      TouchHandler();
+
+      CleO.Start();
+
+      AnimationLoop();
+
+      CleO.StringExt(FONT_SANS_4, (0.50 * ScreenWidth), (0.05 * ScreenHeight), BLACK, MM, 0, 0, "Scanning I2C Addresses:");
+
+      itoa (ScanI2CAddress, CharOutput, 10);
+      CleO.StringExt(FONT_SANS_7, (0.50 * ScreenWidth), (0.50 * ScreenHeight), BLACK, MM, 0, 0, CharOutput);
+
+      CleO.RectangleColor(GREY);
+      CleO.Tag(DoneButton);
+      CleO.RectangleXY((0.75 * ScreenWidth), (0.43 * ScreenHeight), 50, 50);
+      CleO.StringExt(FONT_SANS_6, (0.80 * ScreenWidth), (0.50 * ScreenHeight), WHITE, MM, 0, 0, "X");
+
+      CleO.Show();
+
+      if (millis() > ScanTimer)
+      {
+        Wire.requestFrom(ScanI2CAddress, I2CByteSize);
+        if (Wire.available() > 0)
+        {
+          I2CAddress = ScanI2CAddress;
+          CleO.Start();
+          Selected = true;
+        }
+        else
+        {
+          if (ScanI2CAddress == 127)
+          {
+            ScanI2CAddress = 0;
+          }
+          else
+          {
+            ScanI2CAddress++;
+          }
+          ScanTimer = millis() + 200;
+        }
+      }
+
+      if (tag == DoneButton)
+      {
+        CleO.Start();
+        Selected = true;
+      }
+    }
+
+  }
+}
+
+void DrawSettingsButtons() //Draws increment and decrement buttons for settings menus
+{
+
+  CleO.RectangleColor(GREY);
+
+  CleO.Tag(IncrementButton);
+  CleO.RectangleXY((0.40 * ScreenWidth), (0.13 * ScreenHeight), 100, 50);
+  CleO.StringExt(FONT_SANS_6, (0.50 * ScreenWidth), (0.20 * ScreenHeight), WHITE, MM, 0, 0, "+");
+
+  CleO.Tag(DecrementButton);
+  CleO.RectangleXY((0.40 * ScreenWidth), (0.72 * ScreenHeight), 100, 50);
+  CleO.StringExt(FONT_SANS_6, (0.50 * ScreenWidth), (0.80 * ScreenHeight), WHITE, MM, 0, 0, "-");
+
+  CleO.Tag(DoneButton);
+  CleO.RectangleXY((0.75 * ScreenWidth), (0.43 * ScreenHeight), 50, 50);
+  CleO.StringExt(FONT_SANS_6, (0.80 * ScreenWidth), (0.50 * ScreenHeight), WHITE, MM, 0, 0, "X");
+
 }
 
 void UARTSettings()
