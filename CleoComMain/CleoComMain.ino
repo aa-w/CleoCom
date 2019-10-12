@@ -129,46 +129,58 @@ void UIHandler() //Handles User Interfaces
   CleO.Start();
 
   MainMenu();
-  if (ShowSettings == true)
+
+  //Page Switch Case
+  switch (MenuMode)
   {
-    switch (MenuMode)
-    {
-      case 1:
+    case 1:
+      CleO.StringExt(FONT_SANS_7, (0.50 * ScreenWidth), (0.55 * ScreenHeight), GREY85, MM, 0, 0, "SERIAL");
+
+      if (ShowSettings == true)
+      {
         SerialSettings();
-        break;
-      case 2:
-        SPISettings();
-        break;
-      case 3:
-        I2CSettings();
-        break;
-      case 4:
-        UARTSettings();
-        break;
-    }
-  }
-  else
-  {
-    //Page Switch Case
-    switch (MenuMode)
-    {
-      case 1:
-        //SerialPage();
+      }
+      else
+      {
         //Runs the spooler function with Serial Pointer
         Spooler(SerialPointer);
-        break;
-      case 2:
+      }
+      break;
+    case 2:
+      CleO.StringExt(FONT_SANS_7, (0.50 * ScreenWidth), (0.55 * ScreenHeight), GREY85, MM, 0, 0, "SPI");
+      if (ShowSettings == true)
+      {
+        SPISettings();
+      }
+      else
+      {
         SPIPage();
-        break;
-      case 3:
+      }
+      break;
+    case 3:
+      CleO.StringExt(FONT_SANS_7, (0.50 * ScreenWidth), (0.55 * ScreenHeight), GREY85, MM, 0, 0, "I2C");
+      if (ShowSettings == true)
+      {
+        I2CSettings();
+      }
+      else
+      {
         Spooler(I2CPointer);
-        break;
-      case 4:
+      }
+      break;
+    case 4:
+      CleO.StringExt(FONT_SANS_7, (0.50 * ScreenWidth), (0.55 * ScreenHeight), GREY85, MM, 0, 0, "UART");
+      if (ShowSettings == true)
+      {
+        UARTSettings();
+      }
+      else
+      {
         UARTPage();
-        break;
-      default:
-        break;
-    }
+      }
+      break;
+    default:
+      break;
   }
 
   AnimationLoop();
@@ -364,7 +376,7 @@ void MainMenu() //Draws the Main Menu with touch tags
 
 void SPIPage()
 {
-  CleO.StringExt(FONT_SANS_5, (0.50 * ScreenWidth), (0.50 * ScreenHeight), BLACK, MM, 0, 0, "SPI");
+  //CleO.StringExt(FONT_SANS_5, (0.50 * ScreenWidth), (0.50 * ScreenHeight), BLACK, MM, 0, 0, "SPI");
 }
 
 void Spooler(byte positionvalue) //Universal output Spooler for the data arrays collected
@@ -405,7 +417,7 @@ void Spooler(byte positionvalue) //Universal output Spooler for the data arrays 
 
 void UARTPage()
 {
-  CleO.StringExt(FONT_SANS_5, (0.50 * ScreenWidth), (0.50 * ScreenHeight), BLACK, MM, 0, 0, "UART");
+  //CleO.StringExt(FONT_SANS_5, (0.50 * ScreenWidth), (0.50 * ScreenHeight), BLACK, MM, 0, 0, "UART");
 }
 
 void SerialSettings()
@@ -635,7 +647,7 @@ void I2CSettings()
 
       AnimationLoop();
 
-      CleO.StringExt(FONT_SANS_4, (0.50 * ScreenWidth), (0.05 * ScreenHeight), BLACK, MM, 0, 0, "Scanning I2C Addresses:");
+      CleO.StringExt(FONT_SANS_4, (0.50 * ScreenWidth), (0.05 * ScreenHeight), BLACK, MM, 0, 0, "Scanning I2C Address:");
 
       itoa (ScanI2CAddress, CharOutput, 10);
       CleO.StringExt(FONT_SANS_7, (0.50 * ScreenWidth), (0.50 * ScreenHeight), BLACK, MM, 0, 0, CharOutput);
